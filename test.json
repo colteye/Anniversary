@@ -1,0 +1,109 @@
+{
+    "title": "Anniversary Crossword",
+    "author": "Erik Coltey",
+    "size": {
+        "rows": 10,
+        "cols": 10
+    },
+    "grid": [
+        "#", "#", "R", "O", "S", "E", "S", "#", "#", "W",
+        "#", "X", "#", "#", "#", "#", "A", "#", "#", "H",
+        "#", "O", "#", "#", "L", "#", "M", "A", "U", "I",
+        "#", "#", "S", "E", "A", "#", "O", "#", "#", "D",
+        "#", "H", "#", "#", "B", "#", "Y", "#", "#", "B",
+        "Y", "O", "U", "T", "U", "B", "E", "#", "#", "E",
+        "#", "T", "#", "A", "B", "I", "D", "E", "B", "Y",
+        "U", "P", "#", "S", "U", "D", "#", "A", "#", "#",
+        "#", "O", "#", "#", "S", "E", "D", "U", "C", "E",
+        "#", "T", "O", "P", "#", "N", "O", "#", "#", "#"
+    ],
+    "clues": {
+        "across": [{
+                "number": 1,
+                "clue": "Our dog’s name",
+                "answer": "ROSES"
+            },
+            {
+                "number": 6,
+                "clue": "Island in Hawaii",
+                "answer": "MAUI"
+            },
+            {
+                "number": 7,
+                "clue": "Large body of saltwater",
+                "answer": "SEA"
+            },
+            {
+                "number": 9,
+                "clue": "Inside joke plushie",
+                "answer": "YOUTUBE"
+            },
+            {
+                "number": 11,
+                "clue": "Island getaway we visited",
+                "answer": "ABIDEBY"
+            },
+            {
+                "number": 13,
+                "clue": "Months we’re celebrating",
+                "answer": "UP"
+            },
+            {
+                "number": 14,
+                "clue": "SUD",
+                "answer": "SUD"
+            },
+            {
+                "number": 15,
+                "clue": "Shared meal favorite",
+                "answer": "SEDUCE"
+            },
+            {
+                "number": 16,
+                "clue": "Sky lights we dream to see",
+                "answer": "TOP"
+            },
+            {
+                "number": 17,
+                "clue": "Conclusion",
+                "answer": "NO"
+            }
+        ],
+        "down": [{
+                "number": 2,
+                "clue": "Dog breed with fluffy white coat",
+                "answer": "SAMOYED"
+            },
+            {
+                "number": 3,
+                "clue": "Expression of affection",
+                "answer": "WHIDBEY"
+            },
+            {
+                "number": 4,
+                "clue": "XO",
+                "answer": "XO"
+            },
+            {
+                "number": 5,
+                "clue": "Type of bread roll",
+                "answer": "LABUBU"
+            },
+            {
+                "number": 8,
+                "clue": "Cooking vessel",
+                "answer": "BIDEN"
+            },
+            {
+                "number": 10,
+                "clue": "Short sleep",
+                "answer": "TAS"
+            },
+            {
+                "number": 11,
+                "clue": "Shared meal favorite",
+                "answer": "HOTPOT"
+            }
+        ]
+    }
+}

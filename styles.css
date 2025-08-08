@@ -1,0 +1,241 @@
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 1.5rem;
+    font-size: 18px;
+}
+
+#toolbar {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 1.2rem;
+}
+
+#fileInput {
+    cursor: pointer;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown button {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 150px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+    border: 1px solid #ccc;
+}
+
+.dropdown-content button {
+    width: 100%;
+    border: none;
+    background: none;
+    padding: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.dropdown-content button:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+#timerDisplay {
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 2.5rem;
+    min-width: 90px;
+    text-align: center;
+    user-select: none;
+}
+
+#timerResetBtn {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+}
+
+#mainContent {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-start;
+}
+
+#crosswordGrid {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: normal;
+    text-transform: uppercase;
+    user-select: none;
+    border: 0.5px solid #444;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    /* ensure no padding */
+    text-align: center;
+    /* fallback */
+    position: relative;
+    /* so .number absolute is inside the cell */
+}
+
+/* Black squares */
+.cell.block {
+    background: black;
+    cursor: default;
+    border: 0.5px solid #222;
+}
+
+/* Numbers on upper left inside cell */
+.cell .number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 10px;
+    font-weight: normal;
+    color: #444;
+    pointer-events: none;
+    /* so clicks go through */
+    user-select: none;
+    z-index: 3;
+}
+
+.cell .letter {
+    position: relative;
+    /* normal flow */
+    z-index: 2;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+    /* to avoid focus issues if needed */
+}
+
+/* Highlight background only, no border or size change */
+.cell.highlight {
+    background-color: #d3e7ff;
+}
+
+/* Focused cell blue border and glow stays */
+.cell.cursor {
+    border-color: #0077ff;
+    /* keep same border width */
+    outline: 2px solid #0077ff;
+    /* outline won't change size */
+    outline-offset: -2px;
+    /* pulls outline inside border */
+    box-shadow: 0 0 6px 2px rgba(0, 119, 255, 0.6);
+    z-index: 5;
+}
+
+/* Incorrect letters */
+.cell.incorrect {
+    background-color: #f9c0c0;
+    z-index: 2;
+}
+
+/* Clues container side-by-side */
+#clues {
+    display: flex;
+    /* row layout */
+    flex-direction: row;
+    /* horizontal children */
+    gap: 3rem;
+    max-width: 900px;
+    /* wider for bigger clues */
+    user-select: none;
+    font-size: 20px;
+}
+
+/* Each clue column gets half the width */
+#clues>div {
+    flex: 1;
+    /* equal width */
+    min-width: 0;
+    /* prevents overflow */
+}
+
+/* Headings */
+#clues h2 {
+    margin-top: 0;
+    font-weight: bold;
+    font-size: 1.6rem;
+}
+
+/* Clues list */
+#clues ul {
+    list-style: none;
+    padding-left: 0;
+    max-height: 450px;
+    overflow-y: auto;
+    width: 100%;
+    margin: 0;
+}
+
+/* Individual clue items */
+#clues li {
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: baseline;
+}
+
+/* Number in clue bold and margin right */
+#clues li .clue-num {
+    font-weight: bold;
+    margin-right: 0.75rem;
+    min-width: 1.8rem;
+    text-align: right;
+    user-select: none;
+    font-size: 18px;
+}
+
+/* Clue text */
+#clues li .clue-text {
+    flex-grow: 1;
+}
+
+/* Hover and active states */
+#clues li:hover {
+    background-color: #e0eaff;
+}
+
+#clues li.active {
+    background-color: #0077ff;
+    color: white;
+}
+
+/* Status message styling */
+#status {
+    min-height: 1.5em;
+    color: #d33;
+    font-weight: bold;
+    margin-top: 0.75rem;
+    user-select: none;
+}
