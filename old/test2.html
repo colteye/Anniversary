@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Anniversary!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #ff6ec7, #c44569, #8e44ad, #9b59b6, #e84393, #fd79a8);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        #anniversary-text {
+            position: fixed;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 2.8rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            animation: pulse 2s ease-in-out infinite;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        #love-text {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            animation: glow 3s ease-in-out infinite alternate;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+            50% { transform: translateX(-50%) scale(1.05); opacity: 1; }
+        }
+
+        @keyframes glow {
+            0% { 
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 255, 255, 0.3);
+                transform: translateX(-50%) scale(1);
+            }
+            100% { 
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 110, 199, 0.6), 0 0 30px rgba(196, 69, 105, 0.4);
+                transform: translateX(-50%) scale(1.02);
+            }
+        }
+
+        /* Mail Icon Styles */
+        .mail-icon {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 25;
+            font-size: 24px;
+            color: #ff6ec7;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            animation: mailFloat 3s ease-in-out infinite;
+        }
+
+        .mail-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 110, 199, 0.5);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        @keyframes mailFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        /* Mail Popup Styles */
+        .mail-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .mail-popup.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .love-note {
+            background: linear-gradient(135deg, #ff6ec7, #fd79a8, #e84393);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: scale(0.8) translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .love-note-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .love-note-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .love-note-header .date {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .love-note textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            resize: vertical;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .love-note textarea:focus {
+            outline: none;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .love-note textarea::placeholder {
+            color: #888;
+            font-style: italic;
+        }
+
+        .love-note-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .love-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            min-width: 100px;
+        }
+
+        .love-btn.save {
+            background: rgba(255, 255, 255, 0.9);
+            color: #ff6ec7;
+        }
+
+        .love-btn.save:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .love-btn.close {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .love-btn.close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .close-x {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .close-x:hover {
+            opacity: 1;
+        }
+
+        /* Notification for saved notes */
+        .save-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            z-index: 35;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .save-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .heart {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 20px;
+            animation: floatUp 6s ease-in-out infinite;
+            bottom: -50px;
+            z-index: 5;
+        }
+
+        @keyframes floatUp {
+            0% { 
+                transform: translateY(0) rotate(0deg) scale(0.5); 
+                opacity: 0; 
+            }
+            10% { 
+                opacity: 1; 
+                transform: translateY(-10vh) rotate(36deg) scale(1);
+            }
+            90% { 
+                opacity: 1; 
+                transform: translateY(-90vh) rotate(324deg) scale(1);
+            }
+            100% { 
+                transform: translateY(-100vh) rotate(360deg) scale(0.5); 
+                opacity: 0; 
+            }
+        }
+
+        .controls {
+            position: fixed;
+            top: 80px;
+            left: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+        }
+
+        .file-input-container {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            max-width: 250px;
+        }
+
+        .file-input-container input[type="file"] {
+            color: white;
+            font-size: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 5px;
+            margin: 5px 0;
+            width: 100%;
+        }
+
+        .file-input-container label {
+            color: white;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .image-selector {
+            margin: 8px 0;
+        }
+
+        .image-selector select {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 5px;
+            width: 100%;
+        }
+
+        .image-selector option {
+            background: #333;
+            color: white;
+        }
+
+        .navigation-controls {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .nav-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+            min-width: 40px;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .image-counter {
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .status {
+            color: #90EE90;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .error {
+            color: #FFB6C1;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        /* CSS Sparkles */
+        .sparkle {
+            position: absolute;
+            color: #fff;
+            font-size: 14px;
+            pointer-events: none;
+            animation: sparkleFloatUp 5s linear infinite;
+            text-shadow: 0 0 6px #fff, 0 0 12px #ff6ec7, 0 0 18px #c44569;
+            bottom: -50px;
+            z-index: 3;
+        }
+
+        .png-sparkle {
+            position: absolute;
+            pointer-events: none;
+            animation: pngSparkleFloat 7s linear infinite;
+            bottom: -50px;
+            z-index: 3;
+            width: 50px;
+            height: 50px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        @keyframes sparkleFloatUp {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+                transform: translateY(-10vh) rotate(72deg) scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateY(-50vh) rotate(180deg) scale(1.2);
+            }
+            90% {
+                opacity: 0.8;
+                transform: translateY(-90vh) rotate(288deg) scale(1);
+            }
+            100% {
+                transform: translateY(-110vh) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pngSparkleFloat {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            12% {
+                opacity: 1;
+                transform: translateY(-12vh) rotate(60deg) scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-50vh) rotate(180deg) scale(1.2);
+            }
+            88% {
+                opacity: 1;
+                transform: translateY(-88vh) rotate(300deg) scale(0.9);
+            }
+            100% {
+                transform: translateY(-110vh) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        #background-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        @media (max-width: 768px) {
+            #anniversary-text {
+                font-size: 2.2rem;
+            }
+            #love-text {
+                font-size: 1.4rem;
+            }
+            
+            .love-note {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .love-note textarea {
+                height: 150px;
+                font-size: 14px;
+            }
+            
+            .love-note-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .love-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="background-effects"></div>
+    
+    <!-- Mail Icon -->
+    <div class="mail-icon" id="mail-icon" title="Write a love note ✉️">
+        💌
+    </div>
+    
+    <!-- Mail Popup -->
+    <div class="mail-popup" id="mail-popup">
+        <div class="love-note">
+            <div class="close-x" id="close-popup">&times;</div>
+            <div class="love-note-header">
+                <h2>💕 Love Note 💕</h2>
+                <div class="date" id="current-date"></div>
+            </div>
+            <textarea 
+                id="love-message" 
+                placeholder="Write your heart out... Express all the love, all the memories, all the dreams you want to share. This is your space to pour your heart onto paper... ✨💖"
+            ></textarea>
+            <div class="love-note-buttons">
+                <button class="love-btn save" id="save-note">💾 Save My Love</button>
+                <button class="love-btn close" id="close-note">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Notification -->
+    <div class="save-notification" id="save-notification">
+        💕 Love note saved in your heart! 💕
+    </div>
+    
+    <div class="controls">
+        <div>🖱️ Subtle movement: Limited orbit</div>
+        <div>🔍 Mouse wheel: Zoom</div>
+    </div>
+
+    <div class="file-input-container">
+        <label for="image-upload">Upload Images:</label>
+        <input type="file" id="image-upload" accept="image/*" multiple>
+        
+        <label for="depth-upload">Upload Depth Maps:</label>
+        <input type="file" id="depth-upload" accept="image/*" multiple>
+        
+        <div class="image-selector">
+            <label for="image-select">Current Image:</label>
+            <select id="image-select">
+                <option value="">Select an image pair...</option>
+            </select>
+        </div>
+        
+        <div class="navigation-controls">
+            <button class="nav-button" id="prev-btn" disabled>‹</button>
+            <div class="image-counter" id="image-counter">0/0</div>
+            <button class="nav-button" id="next-btn" disabled>›</button>
+        </div>
+        
+        <div>
+            <label>Parallax Intensity:</label>
+            <input type="range" id="parallax-strength" min="0" max="100" value="100" style="width: 100%;">
+        </div>
+        
+        <div>
+            <label>Edge Fade:</label>
+            <input type="range" id="edge-fade" min="0" max="100" value="30" style="width: 100%;">
+        </div>
+        
+        <div id="status" class="status"></div>
+    </div>
+    
+    <div id="hearts"></div>
+    
+    <div id="canvas-container"></div>
+    
+    <div id="anniversary-text">Happy Anniversary Xiaolu!! ❤️</div>
+    <div id="love-text">I love you to the moon and back 🌙✨💕🚀</div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // Mail functionality
+        function initMailFeature() {
+            const mailIcon = document.getElementById('mail-icon');
+            const mailPopup = document.getElementById('mail-popup');
+            const closePopup = document.getElementById('close-popup');
+            const closeNote = document.getElementById('close-note');
+            const saveNote = document.getElementById('save-note');
+            const loveMessage = document.getElementById('love-message');
+            const saveNotification = document.getElementById('save-notification');
+            const currentDateEl = document.getElementById('current-date');
+            
+            // Set current date
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            currentDateEl.textContent = now.toLocaleDateString('en-US', options);
+            
+            // Load saved note
+            const savedNote = localStorage.getItem('loveNote');
+            if (savedNote) {
+                loveMessage.value = savedNote;
+            }
+            
+            // Show popup
+            function showMailPopup() {
+                mailPopup.classList.add('show');
+                loveMessage.focus();
+            }
+            
+            // Hide popup
+            function hideMailPopup() {
+                mailPopup.classList.remove('show');
+            }
+            
+            // Save note
+            function saveLoveNote() {
+                const note = loveMessage.value.trim();
+                if (note) {
+                    localStorage.setItem('loveNote', note);
+                    showSaveNotification();
+                } else {
+                    showSaveNotification('Please write something first! 💕');
+                }
+            }
+            
+            // Show save notification
+            function showSaveNotification(message = '💕 Love note saved in your heart! 💕') {
+                saveNotification.textContent = message;
+                saveNotification.classList.add('show');
+                setTimeout(() => {
+                    saveNotification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Event listeners
+            mailIcon.addEventListener('click', showMailPopup);
+            closePopup.addEventListener('click', hideMailPopup);
+            closeNote.addEventListener('click', hideMailPopup);
+            saveNote.addEventListener('click', saveLoveNote);
+            
+            // Close on background click
+            mailPopup.addEventListener('click', (e) => {
+                if (e.target === mailPopup) {
+                    hideMailPopup();
+                }
+            });
+            
+            // Close on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && mailPopup.classList.contains('show')) {
+                    hideMailPopup();
+                }
+            });
+            
+            // Auto-save while typing (debounced)
+            let saveTimeout;
+            loveMessage.addEventListener('input', () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    if (loveMessage.value.trim()) {
+                        localStorage.setItem('loveNote', loveMessage.value);
+                    }
+                }, 1000);
+            });
+        }
+        
+        // Scene setup - full screen
+        const canvasContainer = document.getElementById('canvas-container');
+        
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+            50,
+            window.innerWidth / window.innerHeight,
+            0.1, 
+            1000
+        );
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        canvasContainer.appendChild(renderer.domElement);
+
+        // Very limited OrbitControls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.enablePan = false;
+        controls.screenSpacePanning = false;
+        controls.enableRotate = true;
+        controls.enableZoom = true;
+        
+        controls.minAzimuthAngle = -Math.PI / 15;
+        controls.maxAzimuthAngle = Math.PI / 15;
+        controls.minPolarAngle = Math.PI / 2 - Math.PI / 15;
+        controls.maxPolarAngle = Math.PI / 2 + Math.PI / 15;
+        
+        
+        controls.minDistance = 5;
+        controls.maxDistance = 6;
+
+        // Storage for image pairs
+        let imagePairs = [];
+        let currentImageIndex = -1;
+        let parallaxPlane = null;
+        let pngTextures = [];
+        let availablePairs = []; // Only complete pairs
+
+        // Status display
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = isError ? 'error' : 'status';
+        }
+
+        // Update navigation controls
+        function updateNavigationControls() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const counter = document.getElementById('image-counter');
+            
+            // Get only complete pairs
+            availablePairs = imagePairs.filter(pair => pair.image && pair.depth);
+            const totalPairs = availablePairs.length;
+            
+            if (totalPairs === 0) {
+                counter.textContent = '0/0';
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                return;
+            }
+            
+            // Find current index in available pairs
+            let currentAvailableIndex = -1;
+            if (currentImageIndex >= 0 && imagePairs[currentImageIndex]) {
+                currentAvailableIndex = availablePairs.findIndex(pair => 
+                    pair === imagePairs[currentImageIndex]
+                );
+            }
+            
+            if (currentAvailableIndex >= 0) {
+                counter.textContent = `${currentAvailableIndex + 1}/${totalPairs}`;
+                prevBtn.disabled = currentAvailableIndex <= 0;
+                nextBtn.disabled = currentAvailableIndex >= totalPairs - 1;
+            } else {
+                counter.textContent = `0/${totalPairs}`;
+                prevBtn.disabled = true;
+                nextBtn.disabled = totalPairs <= 0;
+            }
+        }
+
+        // Navigate to previous image
+        function navigateToPrevious() {
+            if (availablePairs.length === 0) return;
+            
+            let currentAvailableIndex = -1;
+            if (currentImageIndex >= 0 && imagePairs[currentImageIndex]) {
+                currentAvailableIndex = availablePairs.findIndex(pair => 
+                    pair === imagePairs[currentImageIndex]
+                );
+            }
+            
+            const newIndex = Math.max(0, currentAvailableIndex - 1);
+            const targetPair = availablePairs[newIndex];
+            const targetGlobalIndex = imagePairs.findIndex(pair => pair === targetPair);
+            
+            if (targetGlobalIndex >= 0) {
+                currentImageIndex = targetGlobalIndex;
+                createParallaxPlane(targetPair);
+                updateImageSelector();
+                updateNavigationControls();
+                
+                // Update dropdown selection
+                document.getElementById('image-select').value = targetGlobalIndex;
+            }
+        }
+
+        // Navigate to next image
+        function navigateToNext() {
+            if (availablePairs.length === 0) return;
+            
+            let currentAvailableIndex = -1;
+            if (currentImageIndex >= 0 && imagePairs[currentImageIndex]) {
+                currentAvailableIndex = availablePairs.findIndex(pair => 
+                    pair === imagePairs[currentImageIndex]
+                );
+            }
+            
+            const newIndex = Math.min(availablePairs.length - 1, currentAvailableIndex + 1);
+            const targetPair = availablePairs[newIndex];
+            const targetGlobalIndex = imagePairs.findIndex(pair => pair === targetPair);
+            
+            if (targetGlobalIndex >= 0) {
+                currentImageIndex = targetGlobalIndex;
+                createParallaxPlane(targetPair);
+                updateImageSelector();
+                updateNavigationControls();
+                
+                // Update dropdown selection
+                document.getElementById('image-select').value = targetGlobalIndex;
+            }
+        }
+
+        // Event listeners for navigation buttons
+        document.getElementById('prev-btn').addEventListener('click', navigateToPrevious);
+        document.getElementById('next-btn').addEventListener('click', navigateToNext);
+
+        // 2.5D Parallax Shader with negative parallax strength
+        const parallaxVertexShader = `
+            varying vec2 vUv;
+            varying vec3 vViewPosition;
+            
+            void main() {
+                vUv = uv;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                vViewPosition = -mvPosition.xyz;
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `;
+
+        const parallaxFragmentShader = `
+            uniform sampler2D colorTexture;
+            uniform sampler2D depthTexture;
+            uniform float parallaxStrength;
+            uniform float edgeFade;
+            uniform vec2 viewOffset;
+            
+            varying vec2 vUv;
+            varying vec3 vViewPosition;
+            
+            void main() {
+                // Get depth from depth map
+                float depth = texture2D(depthTexture, vUv).r;
+                
+                // Calculate parallax offset based on view angle and depth
+                vec3 viewDir = normalize(vViewPosition);
+                vec2 parallaxOffset = viewOffset * depth * parallaxStrength;
+                
+                // Sample color texture with parallax offset
+                vec2 offsetUv = vUv + parallaxOffset;
+                
+                // Clamp UV coordinates to prevent wrapping
+                offsetUv = clamp(offsetUv, 0.0, 1.0);
+                
+                vec4 color = texture2D(colorTexture, offsetUv);
+                
+                // Add depth-based lighting
+                float lightingFactor = 1.0 + depth * 0.1;
+                color.rgb *= lightingFactor;
+                
+                // Edge fade effect
+                vec2 fadeUv = vUv;
+                float fadeDistance = edgeFade * 0.5;
+                
+                float fadeX = min(
+                    smoothstep(0.0, fadeDistance, fadeUv.x),
+                    smoothstep(1.0, 1.0 - fadeDistance, fadeUv.x)
+                );
+                
+                float fadeY = min(
+                    smoothstep(0.0, fadeDistance, fadeUv.y),
+                    smoothstep(1.0, 1.0 - fadeDistance, fadeUv.y)
+                );
+                
+                float fadeAlpha = fadeX * fadeY;
+                color.a *= fadeAlpha;
+                
+                gl_FragColor = color;
+            }
+        `;
+
+        // File handling for images
+        document.getElementById('image-upload').addEventListener('change', function(event) {
+            const files = Array.from(event.target.files);
+            processImageFiles(files, 'image');
+        });
+
+        document.getElementById('depth-upload').addEventListener('change', function(event) {
+            const files = Array.from(event.target.files);
+            processImageFiles(files, 'depth');
+        });
+
+        function processImageFiles(files, type) {
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const baseName = file.name.split('.')[0].replace(/_depth|_normal|_disp/, '');
+                        
+                        let pair = imagePairs.find(p => p.name === baseName);
+                        if (!pair) {
+                            pair = { name: baseName, image: null, depth: null };
+                            imagePairs.push(pair);
+                        }
+                        
+                        if (type === 'image') {
+                            pair.image = e.target.result;
+                        } else {
+                            pair.depth = e.target.result;
+                        }
+                        
+                        updateImageSelector();
+                        updateNavigationControls();
+                        updateStatus(`Loaded ${type}: ${file.name}`);
+                    };
+                    img.onerror = function() {
+                        updateStatus(`Failed to load: ${file.name}`, true);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    updateStatus(`Failed to read: ${file.name}`, true);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateImageSelector() {
+            const selector = document.getElementById('image-select');
+            selector.innerHTML = '<option value="">Select an image pair...</option>';
+            
+            imagePairs.forEach((pair, index) => {
+                if (pair.image && pair.depth) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${pair.name} ✓`;
+                    selector.appendChild(option);
+                } else {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${pair.name} (incomplete)`;
+                    option.disabled = true;
+                    selector.appendChild(option);
+                }
+            });
+        }
+
+        document.getElementById('image-select').addEventListener('change', function(e) {
+            const index = parseInt(e.target.value);
+            if (!isNaN(index) && imagePairs[index]) {
+                currentImageIndex = index;
+                createParallaxPlane(imagePairs[index]);
+                updateNavigationControls();
+            }
+        });
+
+        function createParallaxPlane(imagePair) {
+            updateStatus('Creating parallax plane...');
+            
+            if (parallaxPlane) {
+                scene.remove(parallaxPlane);
+                parallaxPlane = null;
+            }
+            
+            const loader = new THREE.TextureLoader();
+            
+            const loadTexture = (url) => {
+                return new Promise((resolve, reject) => {
+                    loader.load(url, resolve, undefined, reject);
+                });
+            };
+            
+            Promise.all([
+                loadTexture(imagePair.image),
+                loadTexture(imagePair.depth)
+            ]).then(([colorTexture, depthTexture]) => {
+                const planeSize = 5;
+                const geometry = new THREE.PlaneGeometry(planeSize, planeSize, 100, 100);
+                
+                const material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        colorTexture: { value: colorTexture },
+                        depthTexture: { value: depthTexture },
+                        parallaxStrength: { value: -0.4 },
+                        edgeFade: { value: 0.3 },
+                        viewOffset: { value: new THREE.Vector2(0, 0) }
+                    },
+                    vertexShader: parallaxVertexShader,
+                    fragmentShader: parallaxFragmentShader,
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
+                
+                parallaxPlane = new THREE.Mesh(geometry, material);
+                scene.add(parallaxPlane);
+                
+                updateStatus(`Successfully loaded: ${imagePair.name}`);
+            }).catch(error => {
+                updateStatus(`Failed to create plane: ${error.message}`, true);
+                console.error('Texture loading error:', error);
+            });
+        }
+
+        function updateParallax() {
+            if (parallaxPlane && parallaxPlane.material.uniforms) {
+                const strength = -document.getElementById('parallax-strength').value / 100;
+                const fade = document.getElementById('edge-fade').value / 100;
+                
+                parallaxPlane.material.uniforms.parallaxStrength.value = strength;
+                parallaxPlane.material.uniforms.edgeFade.value = fade;
+                
+                const cameraDirection = new THREE.Vector3();
+                camera.getWorldDirection(cameraDirection);
+                
+                const offset = new THREE.Vector2(
+                    cameraDirection.x * 0.05,
+                    cameraDirection.y * 0.05
+                );
+                
+                parallaxPlane.material.uniforms.viewOffset.value = offset;
+            }
+        }
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        directionalLight.position.set(1, 1, 2);
+        scene.add(directionalLight);
+
+        // Camera positioning
+        camera.position.set(0, 0, 4);
+        camera.lookAt(0, 0, 0);
+
+        let time = 0;
+
+        // Reduced sparkles
+        function addSparkles() {
+            const sparkleGeometry = new THREE.BufferGeometry();
+            const sparkleCount = 20;
+            const positions = new Float32Array(sparkleCount * 3);
+            
+            for (let i = 0; i < sparkleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 12;
+                positions[i + 1] = (Math.random() - 0.5) * 12;
+                positions[i + 2] = (Math.random() - 0.5) * 8;
+            }
+            
+            sparkleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const sparkleMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.03,
+                transparent: true,
+                opacity: 0.4
+            });
+            
+            const sparkles = new THREE.Points(sparkleGeometry, sparkleMaterial);
+            scene.add(sparkles);
+            
+            return sparkles;
+        }
+
+        const sparkles3D = addSparkles();
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            time += 0.005;
+            
+            updateParallax();
+            
+            sparkles3D.rotation.x += 0.0005;
+            sparkles3D.rotation.y += 0.001;
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Create hearts
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 95 + '%';
+            heart.style.animationDelay = Math.random() * 2 + 's';
+            heart.style.animationDuration = (Math.random() * 2 + 6) + 's';
+            document.getElementById('hearts').appendChild(heart);
+            
+            setTimeout(() => {
+                if (heart.parentNode) heart.remove();
+            }, 8000);
+        }
+
+        // Create sparkles
+        function createSparkle() {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            const sparkleSymbols = ['✨', '⭐', '💫', '🌟'];
+            sparkle.innerHTML = sparkleSymbols[Math.floor(Math.random() * sparkleSymbols.length)];
+            sparkle.style.left = Math.random() * 95 + '%';
+            sparkle.style.animationDelay = Math.random() * 2 + 's';
+            sparkle.style.animationDuration = (Math.random() * 3 + 5) + 's';
+            document.getElementById('background-effects').appendChild(sparkle);
+            
+            setTimeout(() => {
+                if (sparkle.parentNode) sparkle.remove();
+            }, 8000);
+        }
+
+        // Create effects
+        setInterval(createHeart, 1000);
+        setInterval(createSparkle, 1500);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        renderer.domElement.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Initialize everything
+        initMailFeature();
+        updateStatus('Ready! Upload your image and depth map files.');
+        updateNavigationControls();
+        animate();
+    </script>
+</body>
+</html>

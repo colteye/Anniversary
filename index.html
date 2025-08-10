@@ -1,67 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet" />
-    <title>Crossword/Cryptic</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Anniversary!</title>
+    <link rel="stylesheet" href="css/styles.css?v=1.0.0">
 </head>
-
 <body>
-    <div id="toolbar">
-        <div class="dropdown">
-            <button id="checkBtn">Check</button>
-            <div class="dropdown-content" id="checkDropdown">
-                <button data-action="square">Square</button>
-                <button data-action="word">Word</button>
-                <button data-action="puzzle">Puzzle</button>
-            </div>
-        </div>
-        <div class="dropdown">
-            <button id="revealBtn">Reveal</button>
-            <div class="dropdown-content" id="revealDropdown">
-                <button data-action="square">Square</button>
-                <button data-action="word">Word</button>
-                <button data-action="puzzle">Puzzle</button>
-            </div>
-        </div>
-        <div class="dropdown">
-            <button id="resetBtn">Reset</button>
-            <div class="dropdown-content" id="resetDropdown">
-                <button data-action="square">Square</button>
-                <button data-action="word">Word</button>
-                <button data-action="puzzle">Puzzle</button>
-                <button data-action="timer">Timer</button>
-            </div>
-        </div>
-        <div id="timerDisplay" aria-live="polite" aria-atomic="true" role="timer">00:00</div>
-        <label>
-            Load Puzzle:
-            <input type="file" id="fileInput" accept=".json" />
-        </label>
+    <div id="background-effects"></div>
+    
+    <!-- Mail Icon -->
+    <div class="mail-icon" id="mail-icon" title="Read love note ✉️">
+        💌
+    </div>
+    
+    <!-- Lock Overlay -->
+    <div class="lock-overlay hidden" id="lock-overlay">
+        <div class="lock-symbol" id="lock-symbol">🔒</div>
+        <div class="lock-text" id="lock-text">Click to solve puzzle</div>
     </div>
 
-    <h1 id="puzzleTitle">Load a crossword puzzle JSON</h1>
-    <p id="puzzleAuthor"></p>
-
-    <div id="mainContent">
-        <div id="crosswordGrid" role="grid" tabindex="0"></div>
-        <div id="clues">
-            <div>
-                <h2>Across</h2>
-                <ul id="acrossClues"></ul>
+    <!-- Mail Popup -->
+    <div class="mail-popup" id="mail-popup">
+        <div class="love-note">
+            <div class="close-x" id="close-popup">&times;</div>
+            <div class="love-note-header">
+                <h2>💕 Love Note 💕</h2>
+                <div class="date">With All My Love</div>
             </div>
-            <div>
-                <h2>Down</h2>
-                <ul id="downClues"></ul>
+            <div class="love-message-text">
+                <p>My Dearest Xiaolu,</p>
+                
+                <p>Every day with you feels like a beautiful dream that I never want to wake up from. Your laughter fills my heart with joy, your smile lights up even my darkest days, and your love gives me strength I never knew I had.</p>
+                
+                <p>I am so grateful for every moment we share together - from our quiet mornings with coffee to our adventures exploring the world. You make ordinary moments feel magical, and you turn every challenge into an opportunity for us to grow stronger together.</p>
+                
+                <p>Thank you for being my partner, my best friend, and my greatest love. I promise to cherish you today, tomorrow, and for all the days that follow.</p>
+                
+                <p>Happy Anniversary, my love! Here's to many more years of laughter, love, and beautiful memories together. 🥂✨</p>
+                
+                <p class="love-signature">Forever yours,<br>❤️</p>
             </div>
         </div>
     </div>
-    <div id="status" role="status" aria-live="polite"></div>
-    <script src="script.js"></script>
+    
+    <!-- Word Search Popup -->
+    <div class="word-search-popup" id="word-search-popup">
+        <div class="word-search-container">
+            <div class="close-x" id="close-word-search">&times;</div>
+            <div class="word-search-title" id="puzzle-title">Find the Hidden Words!</div>
+            <div class="word-search-grid" id="word-search-grid"></div>
+            <div class="words-to-find">
+                <h3>Find these words:</h3>
+                <div class="words-list" id="words-list"></div>
+            </div>
+            <div class="puzzle-complete" id="puzzle-complete">
+                🎉 Puzzle Complete! Image unlocked! 🎉
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div>🖱️ Subtle movement: Limited orbit</div>
+        <div>🔍 Mouse wheel: Zoom</div>
+    </div>
+
+    <div class="file-input-container">
+        <div class="form-group">
+            <label for="image-upload">Upload Images:</label>
+            <input type="file" id="image-upload" accept="image/*" multiple title="Select image files to upload" aria-label="Upload image files">
+        </div>
+        
+        <div class="form-group">
+            <label for="depth-upload">Upload Depth Maps:</label>
+            <input type="file" id="depth-upload" accept="image/*" multiple title="Select depth map files to upload" aria-label="Upload depth map files">
+        </div>
+        
+        <div class="image-selector form-group">
+            <label for="image-select">Current Image:</label>
+            <select id="image-select" title="Select an image pair to view" aria-label="Select image pair">
+                <option value="">Select an image pair...</option>
+            </select>
+        </div>
+        
+        <div class="navigation-controls">
+            <button class="nav-button" id="prev-btn" disabled title="Previous image" aria-label="Go to previous image">‹</button>
+            <div class="image-counter" id="image-counter">0/0</div>
+            <button class="nav-button" id="next-btn" disabled title="Next image" aria-label="Go to next image">›</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="parallax-strength">Parallax Intensity:</label>
+            <input type="range" id="parallax-strength" min="0" max="100" value="100" title="Adjust parallax effect intensity" aria-label="Parallax intensity slider">
+        </div>
+        
+        <div class="form-group">
+            <label for="edge-fade">Edge Fade:</label>
+            <input type="range" id="edge-fade" min="0" max="100" value="30" title="Adjust edge fade effect" aria-label="Edge fade slider">
+        </div>
+        
+        <div id="status" class="status"></div>
+    </div>
+    
+    <div id="hearts"></div>
+    
+    <div id="canvas-container"></div>
+    
+    <div id="anniversary-text">Happy Anniversary Xiaolu!! ❤️</div>
+    <div id="love-text">I love you to the moon and back 🌙✨💕🚀</div>
+
+    <!-- Three.js CDN with Cache Busting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js?v=r128"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js?v=0.128.0"></script>
+    
+    <!-- Application Scripts with Cache Busting -->
+    <script src="js/puzzles.js?v=1.0.0"></script>
+    <script src="js/mail.js?v=1.0.0"></script>
+    <script src="js/word-search.js?v=1.0.0"></script>
+    <script src="js/image-manager.js?v=1.0.0"></script>
+    <script src="js/three-scene.js?v=1.0.0"></script>
+    <script src="js/effects.js?v=1.0.0"></script>
+    <script src="js/main.js?v=1.0.0"></script>
 </body>
-
 </html>
