@@ -108,18 +108,30 @@ class WordSearchGame {
             });
         });
 
-        // Create words list
+        // Create words list (hidden by default, only shown when found)
         wordsListElement.innerHTML = '';
         this.puzzle.words.forEach(word => {
             const wordElement = document.createElement('div');
-            wordElement.className = 'word-item';
+            wordElement.className = 'word-item'; // Will be hidden by default
             wordElement.textContent = word;
             wordElement.dataset.word = word;
             wordsListElement.appendChild(wordElement);
         });
 
+        // Show words list container only if there are found words
+        this.updateWordsListVisibility();
+
         // Prevent text selection on the grid
         gridElement.addEventListener('selectstart', (e) => e.preventDefault());
+    }
+
+    updateWordsListVisibility() {
+        const wordsListContainer = document.getElementById('words-list').parentElement;
+        if (this.foundWords.size > 0) {
+            wordsListContainer.querySelector('.words-list').style.display = 'flex';
+        } else {
+            wordsListContainer.querySelector('.words-list').style.display = 'none';
+        }
     }
 
     startSelection(e, row, col) {
@@ -147,6 +159,7 @@ class WordSearchGame {
             this.foundWords.add(selectedWord);
             this.markWordAsFound(selectedWord);
             this.updateWordsList();
+            this.updateWordsListVisibility();
             
             if (this.foundWords.size === this.puzzle.words.length) {
                 setTimeout(() => {

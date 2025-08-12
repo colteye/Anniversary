@@ -5,68 +5,198 @@ let parallaxPlane = null;
 // Make parallaxPlane globally accessible
 window.parallaxPlane = null;
 
+// Intermediate Vertex Shader
 // 2.5D Parallax Shader with negative parallax strength
 const parallaxVertexShader = `
-    varying vec2 vUv;
-    varying vec3 vViewPosition;
-    
-    void main() {
-        vUv = uv;
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        vViewPosition = -mvPosition.xyz;
-        gl_Position = projectionMatrix * mvPosition;
-    }
+varying vec2 vUv;
+varying vec3 vTangentViewPos;
+varying vec3 vTangentFragPos;
+varying vec3 vWorldNormal;
+
+void main() {
+  vUv = uv;
+  
+  // For a plane, we can calculate tangent space directly
+  vec3 N = normalize(normalMatrix * normal);
+  vec3 T = normalize(normalMatrix * vec3(1.0, 0.0, 0.0)); // X-axis as tangent
+  vec3 B = cross(N, T); // Calculate bitangent
+  
+  // Create TBN matrix for tangent space calculations
+  mat3 TBN = transpose(mat3(T, B, N));
+  
+  vec4 worldPos = modelMatrix * vec4(position, 1.0);
+  vec4 viewPos = modelViewMatrix * vec4(position, 1.0);
+  
+  // Transform positions to tangent space
+  vTangentViewPos = TBN * cameraPosition;
+  vTangentFragPos = TBN * worldPos.xyz;
+  vWorldNormal = N;
+  
+  gl_Position = projectionMatrix * viewPos;
+}
 `;
 
 const parallaxFragmentShader = `
-    uniform sampler2D colorTexture;
-    uniform sampler2D depthTexture;
-    uniform float parallaxStrength;
-    uniform float edgeFade;
-    uniform vec2 viewOffset;
-    
-    varying vec2 vUv;
-    varying vec3 vViewPosition;
-    
-    void main() {
-        // Get depth from depth map
-        float depth = texture2D(depthTexture, vUv).r;
-        
-        // Calculate parallax offset based on view angle and depth
-        vec3 viewDir = normalize(vViewPosition);
-        vec2 parallaxOffset = viewOffset * depth * parallaxStrength;
-        
-        // Sample color texture with parallax offset
-        vec2 offsetUv = vUv + parallaxOffset;
-        
-        // Clamp UV coordinates to prevent wrapping
-        offsetUv = clamp(offsetUv, 0.0, 1.0);
-        
-        vec4 color = texture2D(colorTexture, offsetUv);
-        
-        // Add depth-based lighting
-        float lightingFactor = 1.0 + depth * 0.1;
-        color.rgb *= lightingFactor;
-        
-        // Edge fade effect
-        vec2 fadeUv = vUv;
-        float fadeDistance = edgeFade * 0.5;
-        
-        float fadeX = min(
-            smoothstep(0.0, fadeDistance, fadeUv.x),
-            smoothstep(1.0, 1.0 - fadeDistance, fadeUv.x)
-        );
-        
-        float fadeY = min(
-            smoothstep(0.0, fadeDistance, fadeUv.y),
-            smoothstep(1.0, 1.0 - fadeDistance, fadeUv.y)
-        );
-        
-        float fadeAlpha = fadeX * fadeY;
-        color.a *= fadeAlpha;
-        
-        gl_FragColor = color;
+uniform sampler2D colorTexture;
+uniform sampler2D depthTexture;
+uniform float parallaxStrength;
+uniform vec2 viewOffset;
+uniform float edgeFade;
+uniform float depthBlur;
+
+varying vec2 vUv;
+varying vec3 vTangentViewPos;
+varying vec3 vTangentFragPos;
+varying vec3 vWorldNormal;
+
+// Gaussian blur function for depth sampling
+float sampleDepthBlurred(vec2 texCoords, float blurAmount) {
+  if (blurAmount <= 0.0) {
+    return 1.0 - texture2D(depthTexture, texCoords).r;
+  }
+  
+  float texelSize = 1.0 / 512.0; // Adjust based on your texture size
+  float blur = blurAmount * texelSize;
+  
+  // 5x5 Gaussian kernel weights
+  float weights[25];
+  weights[0] = 0.003765; weights[1] = 0.015019; weights[2] = 0.023792; weights[3] = 0.015019; weights[4] = 0.003765;
+  weights[5] = 0.015019; weights[6] = 0.059912; weights[7] = 0.094907; weights[8] = 0.059912; weights[9] = 0.015019;
+  weights[10] = 0.023792; weights[11] = 0.094907; weights[12] = 0.150342; weights[13] = 0.094907; weights[14] = 0.023792;
+  weights[15] = 0.015019; weights[16] = 0.059912; weights[17] = 0.094907; weights[18] = 0.059912; weights[19] = 0.015019;
+  weights[20] = 0.003765; weights[21] = 0.015019; weights[22] = 0.023792; weights[23] = 0.015019; weights[24] = 0.003765;
+  
+  float result = 0.0;
+  int index = 0;
+  
+  for (int i = -2; i <= 2; i++) {
+    for (int j = -2; j <= 2; j++) {
+      vec2 offset = vec2(float(j), float(i)) * blur;
+      float depth = 1.0 - texture2D(depthTexture, texCoords + offset).r;
+      result += depth * weights[index];
+      index++;
     }
+  }
+  
+  return result;
+}
+
+vec2 parallaxOcclusionMapping(vec2 texCoords, vec3 viewDir) {
+  // Dynamic layer count based on viewing angle
+  float minLayers = 16.0;
+  float maxLayers = 64.0;
+  float numLayers = mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));
+  
+  float layerDepth = 1.0 / numLayers;
+  float currentLayerDepth = 0.0;
+  
+  // Scale the parallax offset
+  vec2 P = viewDir.xy * parallaxStrength;
+  vec2 deltaTexCoords = P / numLayers;
+  
+  vec2 currentTexCoords = texCoords;
+  float currentDepthMapValue = sampleDepthBlurred(currentTexCoords, depthBlur);
+  
+  // Raymarching through depth layers
+  while(currentLayerDepth < currentDepthMapValue) {
+    currentTexCoords -= deltaTexCoords;
+    currentDepthMapValue = sampleDepthBlurred(currentTexCoords, depthBlur);
+    currentLayerDepth += layerDepth;
+  }
+  
+  // Occlusion mapping - find exact intersection point
+  vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+  
+  float afterDepth = currentDepthMapValue - currentLayerDepth;
+  float beforeDepth = sampleDepthBlurred(prevTexCoords, depthBlur) - currentLayerDepth + layerDepth;
+  
+  float weight = afterDepth / (afterDepth - beforeDepth);
+  vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+  
+  return finalTexCoords;
+}
+
+vec3 calculateNormalFromHeight(vec2 texCoords, float strength) {
+  float texelSize = 1.0 / 512.0; // Adjust based on your texture size
+  
+  // Use blurred depth for normal calculation too
+  float heightL = sampleDepthBlurred(texCoords + vec2(-texelSize, 0.0), depthBlur);
+  float heightR = sampleDepthBlurred(texCoords + vec2(texelSize, 0.0), depthBlur);
+  float heightD = sampleDepthBlurred(texCoords + vec2(0.0, -texelSize), depthBlur);
+  float heightU = sampleDepthBlurred(texCoords + vec2(0.0, texelSize), depthBlur);
+  
+  vec3 normal;
+  normal.x = (heightL - heightR) * strength;
+  normal.y = (heightD - heightU) * strength;
+  normal.z = 1.0;
+  
+  return normalize(normal);
+}
+
+vec3 calculateLighting(vec3 color, vec3 normal, vec2 texCoords) {
+  // Simple directional light
+  vec3 lightDir = normalize(vec3(0.5, 0.5, 1.0));
+  vec3 lightColor = vec3(1.0);
+  
+  // Ambient
+  vec3 ambient = 0.25 * color;
+  
+  // Diffuse
+  float diff = max(dot(normal, lightDir), 0.0);
+  vec3 diffuse = diff * lightColor * color;
+  
+  // Simple specular
+  vec3 viewDir = normalize(vTangentViewPos - vTangentFragPos);
+  vec3 reflectDir = reflect(-lightDir, normal);
+  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
+  vec3 specular = spec * lightColor * 0.3;
+  
+  // Depth-based ambient occlusion (using blurred depth)
+  float depth = sampleDepthBlurred(texCoords, depthBlur);
+  float ao = 1.0 - (depth * depth * 0.3);
+  
+  return (ambient + diffuse + specular) * ao;
+}
+
+void main() {
+  vec3 viewDir = normalize(vTangentViewPos - vTangentFragPos);
+  
+  // Apply view offset
+  vec2 offsetUv = vUv + viewOffset * 0.02;
+  
+  // Calculate parallax mapping
+  vec2 parallaxUv = parallaxOcclusionMapping(offsetUv, viewDir);
+  
+  // Clamp to prevent sampling outside texture bounds
+  parallaxUv = clamp(parallaxUv, 0.001, 0.999);
+  
+  // Sample textures
+  vec4 albedo = texture2D(colorTexture, parallaxUv);
+  
+  // Calculate surface normal from height map
+  vec3 surfaceNormal = calculateNormalFromHeight(parallaxUv, 1.5);
+  
+  // Apply lighting
+  vec3 finalColor = albedo.rgb; //calculateLighting(albedo.rgb, surfaceNormal, parallaxUv);
+  
+  // Add depth-based effects (using blurred depth)
+  float currentDepth = sampleDepthBlurred(parallaxUv, depthBlur);
+  
+  // Subtle depth fog
+  finalColor *= (1.0 - currentDepth * 0.15);
+  
+  // Edge fade based on uniform
+  vec2 edgeFadeDistance = vec2(edgeFade);
+  vec2 edgeFactorAlpha = smoothstep(0.0, edgeFadeDistance.x, vUv) * 
+                        smoothstep(0.0, edgeFadeDistance.y, 1.0 - vUv);
+  float edgeAlpha = edgeFactorAlpha.x * edgeFactorAlpha.y;
+  
+  // Edge darkening for depth perception (separate from fade)
+  vec2 edgeFactor = smoothstep(0.0, 0.05, parallaxUv) * smoothstep(0.0, 0.05, 1.0 - parallaxUv);
+  finalColor *= mix(0.8, 1.0, edgeFactor.x * edgeFactor.y);
+  
+  gl_FragColor = vec4(finalColor, albedo.a * edgeAlpha);
+}
 `;
 
 function initThreeScene() {
@@ -127,7 +257,7 @@ function initThreeScene() {
     });
 }
 
-function createParallaxPlane(imagePair, shouldBlur = false) {
+function createParallaxPlane(imagePair) {
     updateStatus('Creating parallax plane...');
     
     if (parallaxPlane) {
@@ -148,8 +278,26 @@ function createParallaxPlane(imagePair, shouldBlur = false) {
         loadTexture(imagePair.image),
         loadTexture(imagePair.depth)
     ]).then(([colorTexture, depthTexture]) => {
-        const planeSize = 5;
-        const geometry = new THREE.PlaneGeometry(planeSize, planeSize, 100, 100);
+        // Get image dimensions from the loaded texture
+        const imageWidth = colorTexture.image.width;
+        const imageHeight = colorTexture.image.height;
+        const aspectRatio = imageWidth / imageHeight;
+        
+        // Set a base size and calculate dimensions based on aspect ratio
+        const baseSize = 5; // You can adjust this base size as needed
+        let planeWidth, planeHeight;
+        
+        if (aspectRatio > 1) {
+            // Landscape image
+            planeWidth = baseSize;
+            planeHeight = baseSize / aspectRatio;
+        } else {
+            // Portrait or square image
+            planeHeight = baseSize;
+            planeWidth = baseSize * aspectRatio;
+        }
+        
+        const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight, 100, 100);
         
         const material = new THREE.ShaderMaterial({
             uniforms: {
@@ -157,7 +305,8 @@ function createParallaxPlane(imagePair, shouldBlur = false) {
                 depthTexture: { value: depthTexture },
                 parallaxStrength: { value: -0.4 },
                 edgeFade: { value: 0.3 },
-                viewOffset: { value: new THREE.Vector2(0, 0) }
+                viewOffset: { value: new THREE.Vector2(0, 0) },
+                depthBlur: { value: 1.0 }
             },
             vertexShader: parallaxVertexShader,
             fragmentShader: parallaxFragmentShader,
@@ -169,7 +318,7 @@ function createParallaxPlane(imagePair, shouldBlur = false) {
         scene.add(parallaxPlane);
         window.parallaxPlane = parallaxPlane;
         
-        updateStatus(`Successfully loaded: ${imagePair.name}`);
+        updateStatus(`Successfully loaded: ${imagePair.name} (${imageWidth}x${imageHeight}, aspect: ${aspectRatio.toFixed(2)})`);
     }).catch(error => {
         updateStatus(`Failed to create plane: ${error.message}`, true);
         console.error('Texture loading error:', error);
@@ -178,10 +327,10 @@ function createParallaxPlane(imagePair, shouldBlur = false) {
 
 function updateParallax() {
     if (parallaxPlane && parallaxPlane.material.uniforms) {
-        const strength = -document.getElementById('parallax-strength').value / 100;
+        const strength = document.getElementById('parallax-strength').value / 100;
         const fade = document.getElementById('edge-fade').value / 100;
         
-        parallaxPlane.material.uniforms.parallaxStrength.value = strength;
+        parallaxPlane.material.uniforms.parallaxStrength.value = strength * 0.2;
         parallaxPlane.material.uniforms.edgeFade.value = fade;
         
         const cameraDirection = new THREE.Vector3();

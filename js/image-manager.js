@@ -14,9 +14,100 @@ function updateStatus(message, isError = false) {
     status.className = isError ? 'error' : 'status';
 }
 
-// File handling for images
+// Extract corner colors from image to create gradient
+function extractCornerColors(imageUrl, callback) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Add this option
+        
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        try {
+            ctx.drawImage(img, 0, 0);
+            
+            const sampleSize = 20;
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const corners = [
+                { x: 0, y: 0, name: 'top-left' },
+                { x: width - sampleSize, y: 0, name: 'top-right' },
+                { x: 0, y: height - sampleSize, name: 'bottom-left' },
+                { x: width - sampleSize, y: height - sampleSize, name: 'bottom-right' }
+            ];
+            
+            const cornerColors = [];
+            
+            corners.forEach(corner => {
+                const imageData = ctx.getImageData(corner.x, corner.y, sampleSize, sampleSize);
+                const data = imageData.data;
+                
+                let r = 0, g = 0, b = 0;
+                const pixels = data.length / 4;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    r += data[i];
+                    g += data[i + 1];
+                    b += data[i + 2];
+                }
+                
+                r = Math.round(r / pixels);
+                g = Math.round(g / pixels);
+                b = Math.round(b / pixels);
+                
+                cornerColors.push(`rgb(${r}, ${g}, ${b})`);
+            });
+            
+            callback(cornerColors);
+            
+        } catch (error) {
+            console.error('Error extracting colors:', error);
+            callback(['#2a2a2a', '#2a2a2a', '#2a2a2a', '#2a2a2a']);
+        }
+    };
+    
+    img.onerror = function() {
+        console.error('Failed to load image for color extraction');
+        callback(['#2a2a2a', '#2a2a2a', '#2a2a2a', '#2a2a2a']);
+    };
+    
+    img.src = imageUrl;
+}
+
+function updateBackgroundGradientAdvanced(colors) {
+    const body = document.body;
+    const [topLeft, topRight, bottomLeft, bottomRight] = colors;
+    
+    const gradient = `
+        radial-gradient(circle at 0% 0%, ${topLeft} 0%, transparent 50%),
+        radial-gradient(circle at 100% 0%, ${topRight} 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, ${bottomLeft} 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, ${bottomRight} 0%, transparent 50%),
+        linear-gradient(45deg, 
+            ${topLeft} 0%, 
+            ${topRight} 25%, 
+            ${bottomRight} 50%, 
+            ${bottomLeft} 75%,
+            ${topLeft} 100%
+        )
+    `.replace(/\s+/g, ' ').trim();
+    
+    console.log('Setting advanced corner gradient:', gradient);
+    body.style.background = gradient;
+}
+
+function resetBackground() {
+    const body = document.body;
+    body.style.background = '#000000';
+    console.log('Reset background to black');
+}
+
+// File handling for folder upload
 function initImageManager() {
-    // Initialize global references
     imagePairs = window.imagePairs;
     currentImageIndex = window.currentImageIndex;
     availablePairs = window.availablePairs;
@@ -24,31 +115,185 @@ function initImageManager() {
     
     console.log('Image manager initialized');
     
-    // Ensure lock overlay is hidden initially
     const lockOverlay = document.getElementById('lock-overlay');
     if (lockOverlay) {
         lockOverlay.classList.add('hidden');
     }
     
-    document.getElementById('image-upload').addEventListener('change', function(event) {
+    // New folder upload handler
+    document.getElementById('folder-upload').addEventListener('change', function(event) {
         const files = Array.from(event.target.files);
-        processImageFiles(files, 'image');
+        processFolderFiles(files);
     });
+    
+    initLockOverlay();
+}
 
-    document.getElementById('depth-upload').addEventListener('change', function(event) {
-        const files = Array.from(event.target.files);
-        processImageFiles(files, 'depth');
-    });
-
-    document.getElementById('image-select').addEventListener('change', function(e) {
-        const index = parseInt(e.target.value);
-        if (!isNaN(index) && imagePairs[index]) {
-            loadImagePair(index);
+function processFolderFiles(files) {
+    updateStatus('Processing folder...');
+    
+    // Clear existing pairs
+    imagePairs.length = 0;
+    window.imagePairs = imagePairs;
+    
+    // Separate files into main folder and depth subfolder
+    const mainImages = [];
+    const depthImages = [];
+    
+    files.forEach(file => {
+        const pathParts = file.webkitRelativePath.split('/');
+        const fileName = pathParts[pathParts.length - 1];
+        const folderName = pathParts[pathParts.length - 2];
+        
+        // Check if file is an image
+        if (!file.type.startsWith('image/')) return;
+        
+        if (folderName === 'depth') {
+            depthImages.push({file, fileName});
+        } else {
+            mainImages.push({file, fileName});
         }
     });
+    
+    console.log(`Found ${mainImages.length} main images and ${depthImages.length} depth images`);
+    
+    // Process main images first
+    let processedMainImages = 0;
+    let processedDepthImages = 0;
+    const totalImages = mainImages.length + depthImages.length;
+    
+    function checkIfComplete() {
+        if (processedMainImages + processedDepthImages >= totalImages) {
+            checkAndLoadFirstImage();
+            updateNavigationControls();
+            
+            const completePairs = imagePairs.filter(pair => pair.image && pair.depth).length;
+            updateStatus(`Loaded ${completePairs} complete image pairs from folder`);
+        }
+    }
+    
+    // Process main images
+    mainImages.forEach(({file, fileName}) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const baseName = getBaseName(fileName);
+                
+                let pair = imagePairs.find(p => p.name === baseName);
+                if (!pair) {
+                    pair = { name: baseName, image: null, depth: null };
+                    imagePairs.push(pair);
+                }
+                
+                pair.image = e.target.result;
+                window.imagePairs = imagePairs;
+                
+                processedMainImages++;
+                updateStatus(`Processing... ${processedMainImages + processedDepthImages}/${totalImages}`);
+                checkIfComplete();
+            };
+            img.onerror = function() {
+                processedMainImages++;
+                console.error(`Failed to load main image: ${fileName}`);
+                checkIfComplete();
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            processedMainImages++;
+            console.error(`Failed to read main image: ${fileName}`);
+            checkIfComplete();
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Process depth images
+    depthImages.forEach(({file, fileName}) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const baseName = getBaseName(fileName);
+                
+                let pair = imagePairs.find(p => p.name === baseName);
+                if (!pair) {
+                    pair = { name: baseName, image: null, depth: null };
+                    imagePairs.push(pair);
+                }
+                
+                pair.depth = e.target.result;
+                window.imagePairs = imagePairs;
+                
+                processedDepthImages++;
+                updateStatus(`Processing... ${processedMainImages + processedDepthImages}/${totalImages}`);
+                checkIfComplete();
+            };
+            img.onerror = function() {
+                processedDepthImages++;
+                console.error(`Failed to load depth image: ${fileName}`);
+                checkIfComplete();
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            processedDepthImages++;
+            console.error(`Failed to read depth image: ${fileName}`);
+            checkIfComplete();
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    if (totalImages === 0) {
+        updateStatus('No valid image files found in folder', true);
+    }
+}
 
-    // Initialize lock overlay click handler
-    initLockOverlay();
+function getBaseName(fileName) {
+    // Remove file extension and common depth map suffixes
+    return fileName
+        .toLowerCase()
+        .replace(/\.(jpg|jpeg|png|gif|bmp|webp)$/i, '')
+        .replace(/(_depthmap|_depth|_normal|_disp|_displacement)$/i, '');
+}
+
+// Legacy individual file processing (kept for backwards compatibility)
+function processImageFiles(files, type) {
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const baseName = getBaseName(file.name);
+                
+                let pair = imagePairs.find(p => p.name === baseName);
+                if (!pair) {
+                    pair = { name: baseName, image: null, depth: null };
+                    imagePairs.push(pair);
+                }
+                
+                if (type === 'image') {
+                    pair.image = e.target.result;
+                } else {
+                    pair.depth = e.target.result;
+                }
+                
+                window.imagePairs = imagePairs;
+                
+                checkAndLoadFirstImage();
+                updateNavigationControls();
+                updateStatus(`Loaded ${type}: ${file.name}`);
+            };
+            img.onerror = function() {
+                updateStatus(`Failed to load: ${file.name}`, true);
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            updateStatus(`Failed to read: ${file.name}`, true);
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
 function initLockOverlay() {
@@ -80,58 +325,18 @@ function initLockOverlay() {
     console.log('Lock overlay click handler initialized');
 }
 
-function processImageFiles(files, type) {
-    files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const baseName = file.name.split('.')[0].replace(/_depth|_normal|_disp/, '');
-                
-                let pair = imagePairs.find(p => p.name === baseName);
-                if (!pair) {
-                    pair = { name: baseName, image: null, depth: null };
-                    imagePairs.push(pair);
-                }
-                
-                if (type === 'image') {
-                    pair.image = e.target.result;
-                } else {
-                    pair.depth = e.target.result;
-                }
-                
-                // Update globals
-                window.imagePairs = imagePairs;
-                
-                updateImageSelector();
-                checkAndLoadFirstImage();
-                updateNavigationControls();
-                updateStatus(`Loaded ${type}: ${file.name}`);
-            };
-            img.onerror = function() {
-                updateStatus(`Failed to load: ${file.name}`, true);
-            };
-            img.src = e.target.result;
-        };
-        reader.onerror = function() {
-            updateStatus(`Failed to read: ${file.name}`, true);
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
 function checkAndLoadFirstImage() {
-    // Update available pairs
     availablePairs = imagePairs.filter(pair => pair.image && pair.depth);
     window.availablePairs = availablePairs;
     
-    // Only auto-load if we have available pairs and no current image
     if (currentImageIndex === -1 && availablePairs.length > 0) {
         const firstPairGlobalIndex = imagePairs.findIndex(pair => pair === availablePairs[0]);
         if (firstPairGlobalIndex >= 0) {
             console.log('Auto-loading first image pair:', firstPairGlobalIndex);
             loadImagePair(firstPairGlobalIndex);
         }
+    } else if (availablePairs.length === 0) {
+        resetBackground();
     }
 }
 
@@ -152,12 +357,13 @@ function loadImagePair(globalIndex) {
     currentImageIndex = globalIndex;
     window.currentImageIndex = globalIndex;
     
-    // Create the parallax plane (initially without blur, we'll add it based on lock status)
+    extractCornerColors(pair.image, (colors) => {
+        updateBackgroundGradientAdvanced(colors);
+    });
+    
     createParallaxPlane(pair, false);
     
-    // Small delay to ensure the plane is created before applying effects
     setTimeout(() => {
-        // Check if this image is unlocked
         const availableIndex = getAvailableIndexForGlobal(globalIndex);
         const isUnlocked = unlockedImages.has(availableIndex);
         
@@ -170,11 +376,7 @@ function loadImagePair(globalIndex) {
         }
     }, 100);
     
-    updateImageSelector();
     updateNavigationControls();
-    
-    // Update dropdown selection
-    document.getElementById('image-select').value = globalIndex;
 }
 
 function getAvailableIndexForGlobal(globalIndex) {
@@ -189,7 +391,6 @@ function showLockedImage() {
     const lockText = document.getElementById('lock-text');
     const canvasContainer = document.getElementById('canvas-container');
     
-    // Set generic text without filename
     if (lockText) {
         lockText.textContent = 'Click to solve puzzle';
     }
@@ -198,7 +399,6 @@ function showLockedImage() {
         lockOverlay.classList.remove('hidden');
     }
     
-    // Apply blur effect using CSS classes
     if (canvasContainer) {
         canvasContainer.classList.remove('canvas-container-revealed');
         canvasContainer.classList.add('canvas-container-blurred');
@@ -214,7 +414,6 @@ function showUnlockedImage() {
         lockOverlay.classList.add('hidden');
     }
     
-    // Remove blur effect using CSS classes
     if (canvasContainer) {
         canvasContainer.classList.remove('canvas-container-blurred');
         canvasContainer.classList.add('canvas-container-revealed');
@@ -231,7 +430,6 @@ function showWordSearchForCurrentImage() {
     if (availableIndex >= 0) {
         console.log('Showing word search for available index:', availableIndex);
         
-        // Check if the showWordSearch function exists
         if (typeof window.showWordSearch === 'function') {
             window.showWordSearch(availableIndex);
         } else if (typeof showWordSearch === 'function') {
@@ -253,35 +451,11 @@ function unlockCurrentImage() {
         unlockedImages.add(availableIndex);
         window.unlockedImages = unlockedImages;
         showUnlockedImage();
-        updateImageSelector();
     }
 }
 
-// Make functions globally accessible
 window.unlockCurrentImage = unlockCurrentImage;
 
-function updateImageSelector() {
-    const selector = document.getElementById('image-select');
-    selector.innerHTML = '<option value="">Select an image pair...</option>';
-    
-    imagePairs.forEach((pair, index) => {
-        if (pair.image && pair.depth) {
-            const availableIndex = getAvailableIndexForGlobal(index);
-            const isUnlocked = availableIndex >= 0 && unlockedImages.has(availableIndex);
-            
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = isUnlocked ? `${pair.name} ✓` : `${pair.name} 🔒`;
-            selector.appendChild(option);
-        } else {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = `${pair.name} (incomplete)`;
-            option.disabled = true;
-            selector.appendChild(option);
-        }
-    });
-}
 
 function updateNavigationControls() {
     const prevBtn = document.getElementById('prev-btn');

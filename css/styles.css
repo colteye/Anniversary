@@ -1,18 +1,11 @@
 body {
     margin: 0;
     padding: 0;
-    background: linear-gradient(45deg, #ff6ec7, #c44569, #8e44ad, #9b59b6, #e84393, #fd79a8);
-    background-size: 400% 400%;
-    animation: gradientShift 12s ease-in-out infinite;
+    background: #000000; /* Default black background */
+    transition: background 2s ease-in-out; /* Smooth transition between backgrounds */
     font-family: 'Arial', sans-serif;
     overflow: hidden;
     height: 100vh;
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
 }
 
 #canvas-container {
@@ -43,7 +36,7 @@ body {
     color: #fff;
     font-size: 2.8rem;
     font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     text-align: center;
     animation: gentlePulse 4s ease-in-out infinite;
     z-index: 15;
@@ -58,7 +51,7 @@ body {
     color: #fff;
     font-size: 1.8rem;
     font-weight: 600;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 110, 199, 0.6), 0 0 30px rgba(196, 69, 105, 0.4);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     text-align: center;
     animation: gentleGlow 6s ease-in-out infinite alternate;
     z-index: 15;
@@ -88,14 +81,14 @@ body {
     }
 }
 
-/* Mail Icon Styles - more subtle float */
+/* Mail Icon Styles - pink theme */
 .mail-icon {
     position: fixed;
     top: 15px;
     left: 15px;
     width: 50px;
     height: 50px;
-    background: rgba(255, 255, 255, 0.9);
+    background: #fd79a8;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -103,8 +96,8 @@ body {
     cursor: pointer;
     z-index: 25;
     font-size: 24px;
-    color: #ff6ec7;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     backdrop-filter: blur(10px);
     transition: all 0.4s ease;
     animation: gentleFloat 4s ease-in-out infinite;
@@ -113,7 +106,6 @@ body {
 .mail-icon:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(255, 110, 199, 0.5);
-    background: rgba(255, 255, 255, 1);
 }
 
 @keyframes gentleFloat {
@@ -121,7 +113,7 @@ body {
     50% { transform: translateY(-2px); }
 }
 
-/* Mail Popup Styles */
+/* Mail Popup Styles - pink theme */
 .mail-popup {
     position: fixed;
     top: 0;
@@ -147,7 +139,7 @@ body {
 }
 
 .love-note {
-    background: linear-gradient(135deg, #ff6ec7, #fd79a8, #e84393);
+    background: #fd79a8;
     border-radius: 20px;
     padding: 30px;
     max-width: 500px;
@@ -223,7 +215,7 @@ body {
     opacity: 1;
 }
 
-/* Lock Overlay Styles - improved centering */
+/* Lock Overlay Styles - pink theme */
 .lock-overlay {
     position: fixed;
     top: 50%;
@@ -246,7 +238,7 @@ body {
 .lock-symbol {
     width: 120px;
     height: 120px;
-    background: linear-gradient(135deg, #ff6ec7, #fd79a8, #e84393);
+    background: #fd79a8;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -291,10 +283,7 @@ body {
     white-space: nowrap;
 }
 
-/* ... rest of the CSS remains the same ... */
-
-
-/* Word Search Popup Styles */
+/* Word Search Popup Styles - pink theme */
 .word-search-popup {
     position: fixed;
     top: 0;
@@ -315,7 +304,7 @@ body {
 }
 
 .word-search-container {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #ff6ec7, #fd79a8, #e84393);
     border-radius: 20px;
     padding: 30px;
     max-width: 600px;
@@ -352,7 +341,7 @@ body {
 .word-search-cell {
     width: 30px;
     height: 30px;
-    background: rgba(255, 255, 255, 0.9);
+    background: #d3d3d3; /* Light gray */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -365,17 +354,17 @@ body {
 }
 
 .word-search-cell:hover {
-    background: rgba(255, 255, 255, 1);
+    background: #e0e0e0;
     transform: scale(1.05);
 }
 
 .word-search-cell.selected {
-    background: #ff6ec7 !important;
+    background: #ff6ec7 !important; /* Pink highlight */
     color: white;
 }
 
 .word-search-cell.found {
-    background: #00b894 !important;
+    background: #00b894 !important; /* Nice green */
     color: white;
 }
 
@@ -390,7 +379,7 @@ body {
 }
 
 .words-list {
-    display: flex;
+    display: none; /* Hide by default - will show found words only */
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
@@ -402,21 +391,25 @@ body {
     border-radius: 20px;
     font-weight: bold;
     transition: all 0.3s ease;
+    display: none; /* Hidden by default */
 }
 
 .word-item.found {
-    background: #00b894;
+    background: #00b894; /* Nice green */
     text-decoration: line-through;
+    display: inline-block; /* Show when found */
 }
 
 .puzzle-complete {
-    background: linear-gradient(135deg, #00b894, #00cec9);
+    background: #00b894;
     color: white;
     padding: 15px;
     border-radius: 10px;
-    margin-top: 20px;
+    margin: 20px auto 0 auto;
     font-weight: bold;
     display: none;
+    text-align: center;
+    max-width: 300px;
 }
 
 .puzzle-complete.show {
@@ -436,7 +429,7 @@ body {
 
 .heart {
     position: absolute;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.8); /* Increased opacity */
     font-size: 20px;
     animation: smoothFloatUp 8s ease-in-out infinite;
     bottom: -50px;
@@ -463,9 +456,10 @@ body {
     }
 }
 
+/* Controls moved to bottom left */
 .controls {
     position: fixed;
-    top: 80px;
+    bottom: 10px;
     left: 10px;
     color: white;
     font-family: Arial, sans-serif;
@@ -594,10 +588,10 @@ body {
     margin-top: 5px;
 }
 
-/* CSS Sparkles - smoother animation */
+/* CSS Sparkles - increased opacity */
 .sparkle {
     position: absolute;
-    color: #fff;
+    color: rgba(255, 255, 255, 0.9); /* Increased opacity */
     font-size: 14px;
     pointer-events: none;
     animation: smoothSparkleFloat 7s ease-in-out infinite;
@@ -617,6 +611,7 @@ body {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
+    opacity: 0.9; /* Increased opacity */
 }
 
 @keyframes smoothSparkleFloat {
@@ -625,11 +620,11 @@ body {
         opacity: 0;
     }
     15% {
-        opacity: 0.7;
+        opacity: 0.8; /* Increased */
         transform: translateY(-15vh) rotate(45deg) scale(1);
     }
     85% {
-        opacity: 0.5;
+        opacity: 0.7; /* Increased */
         transform: translateY(-85vh) rotate(315deg) scale(1);
     }
     100% {
@@ -644,11 +639,11 @@ body {
         opacity: 0;
     }
     18% {
-        opacity: 0.8;
+        opacity: 0.9; /* Increased */
         transform: translateY(-18vh) rotate(30deg) scale(0.9);
     }
     82% {
-        opacity: 0.6;
+        opacity: 0.8; /* Increased */
         transform: translateY(-82vh) rotate(330deg) scale(1);
     }
     100% {
@@ -694,12 +689,4 @@ body {
     .words-list {
         font-size: 12px;
     }
-}
-
-
-/* Add this to the existing CSS file */
-.love-signature {
-    text-align: right;
-    font-style: italic;
-    margin-top: 30px;
 }
