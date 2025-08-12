@@ -310,11 +310,14 @@ body {
     max-width: 600px;
     width: 95%;
     max-height: 90vh;
-    overflow-y: auto;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     position: relative;
     animation: smoothSlideIn 0.5s ease-out;
+    
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* This centers everything */
 }
 
 .word-search-title {
@@ -379,7 +382,7 @@ body {
 }
 
 .words-list {
-    display: none; /* Hide by default - will show found words only */
+    display: flex; /* Changed from display: none */
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
@@ -391,7 +394,7 @@ body {
     border-radius: 20px;
     font-weight: bold;
     transition: all 0.3s ease;
-    display: none; /* Hidden by default */
+    /* Removed display: none - show all words */
 }
 
 .word-item.found {
@@ -405,15 +408,13 @@ body {
     color: white;
     padding: 15px;
     border-radius: 10px;
-    margin: 20px auto 0 auto;
     font-weight: bold;
-    display: none;
     text-align: center;
-    max-width: 300px;
+    display: none; /* Hidden by default */
 }
 
 .puzzle-complete.show {
-    display: block;
+    display: block !important; /* Force display block when shown */
     animation: gentlePulse 2s ease-in-out infinite;
 }
 

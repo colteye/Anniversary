@@ -133,31 +133,6 @@ vec3 calculateNormalFromHeight(vec2 texCoords, float strength) {
   return normalize(normal);
 }
 
-vec3 calculateLighting(vec3 color, vec3 normal, vec2 texCoords) {
-  // Simple directional light
-  vec3 lightDir = normalize(vec3(0.5, 0.5, 1.0));
-  vec3 lightColor = vec3(1.0);
-  
-  // Ambient
-  vec3 ambient = 0.25 * color;
-  
-  // Diffuse
-  float diff = max(dot(normal, lightDir), 0.0);
-  vec3 diffuse = diff * lightColor * color;
-  
-  // Simple specular
-  vec3 viewDir = normalize(vTangentViewPos - vTangentFragPos);
-  vec3 reflectDir = reflect(-lightDir, normal);
-  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
-  vec3 specular = spec * lightColor * 0.3;
-  
-  // Depth-based ambient occlusion (using blurred depth)
-  float depth = sampleDepthBlurred(texCoords, depthBlur);
-  float ao = 1.0 - (depth * depth * 0.3);
-  
-  return (ambient + diffuse + specular) * ao;
-}
-
 void main() {
   vec3 viewDir = normalize(vTangentViewPos - vTangentFragPos);
   
@@ -173,17 +148,11 @@ void main() {
   // Sample textures
   vec4 albedo = texture2D(colorTexture, parallaxUv);
   
-  // Calculate surface normal from height map
-  vec3 surfaceNormal = calculateNormalFromHeight(parallaxUv, 1.5);
-  
   // Apply lighting
-  vec3 finalColor = albedo.rgb; //calculateLighting(albedo.rgb, surfaceNormal, parallaxUv);
+  vec3 finalColor = albedo.rgb;
   
   // Add depth-based effects (using blurred depth)
   float currentDepth = sampleDepthBlurred(parallaxUv, depthBlur);
-  
-  // Subtle depth fog
-  finalColor *= (1.0 - currentDepth * 0.15);
   
   // Edge fade based on uniform
   vec2 edgeFadeDistance = vec2(edgeFade);

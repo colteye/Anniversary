@@ -6,12 +6,18 @@ class WordSearchGame {
         this.foundWords = new Set();
         this.selectedCells = [];
         this.isSelecting = false;
+        
+        // Convert string grid to character grid
+        this.grid = this.puzzle.grid.map(row => 
+            typeof row === 'string' ? row.split('') : row
+        );
+        
         this.wordPositions = this.findWordPositions();
     }
 
     findWordPositions() {
         const positions = {};
-        const grid = this.puzzle.grid;
+        const grid = this.grid;
         const words = this.puzzle.words;
 
         words.forEach(word => {
@@ -77,6 +83,27 @@ class WordSearchGame {
                     }
                 }
             }
+
+            // Search diagonally (down-left)
+            for (let row = 0; row <= grid.length - word.length; row++) {
+                for (let col = word.length - 1; col < grid[row].length; col++) {
+                    let found = true;
+                    for (let i = 0; i < word.length; i++) {
+                        if (grid[row + i][col - i] !== word[i]) {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        positions[word] = positions[word] || [];
+                        positions[word].push({
+                            start: { row, col },
+                            end: { row: row + word.length - 1, col: col - word.length + 1 },
+                            direction: 'diagonal-left'
+                        });
+                    }
+                }
+            }
         });
 
         return positions;
@@ -87,12 +114,16 @@ class WordSearchGame {
         const titleElement = document.getElementById('puzzle-title');
         const wordsListElement = document.getElementById('words-list');
 
+        console.log('Rendering puzzle:', this.puzzle.title);
+        console.log('Grid element:', gridElement);
+        console.log('Words list element:', wordsListElement);
+
         titleElement.textContent = this.puzzle.title;
         gridElement.innerHTML = '';
-        gridElement.style.gridTemplateColumns = `repeat(${this.puzzle.grid[0].length}, 1fr)`;
+        gridElement.style.gridTemplateColumns = `repeat(${this.grid[0].length}, 1fr)`;
 
         // Create grid cells
-        this.puzzle.grid.forEach((row, rowIndex) => {
+        this.grid.forEach((row, rowIndex) => {
             row.forEach((letter, colIndex) => {
                 const cell = document.createElement('div');
                 cell.className = 'word-search-cell';
@@ -108,30 +139,20 @@ class WordSearchGame {
             });
         });
 
-        // Create words list (hidden by default, only shown when found)
+        // Create words list - SIMPLE APPROACH
         wordsListElement.innerHTML = '';
         this.puzzle.words.forEach(word => {
             const wordElement = document.createElement('div');
-            wordElement.className = 'word-item'; // Will be hidden by default
+            wordElement.className = 'word-item';
             wordElement.textContent = word;
             wordElement.dataset.word = word;
             wordsListElement.appendChild(wordElement);
         });
 
-        // Show words list container only if there are found words
-        this.updateWordsListVisibility();
+        console.log('Created word elements:', wordsListElement.children.length);
 
         // Prevent text selection on the grid
         gridElement.addEventListener('selectstart', (e) => e.preventDefault());
-    }
-
-    updateWordsListVisibility() {
-        const wordsListContainer = document.getElementById('words-list').parentElement;
-        if (this.foundWords.size > 0) {
-            wordsListContainer.querySelector('.words-list').style.display = 'flex';
-        } else {
-            wordsListContainer.querySelector('.words-list').style.display = 'none';
-        }
     }
 
     startSelection(e, row, col) {
@@ -155,11 +176,15 @@ class WordSearchGame {
         this.isSelecting = false;
         const selectedWord = this.getSelectedWord();
         
+        console.log('Selected word:', selectedWord);
+        console.log('Target words:', this.puzzle.words);
+        console.log('Already found:', Array.from(this.foundWords));
+        
         if (this.puzzle.words.includes(selectedWord) && !this.foundWords.has(selectedWord)) {
+            console.log('Found new word:', selectedWord);
             this.foundWords.add(selectedWord);
             this.markWordAsFound(selectedWord);
-            this.updateWordsList();
-            this.updateWordsListVisibility();
+            this.updateWordInList(selectedWord);
             
             if (this.foundWords.size === this.puzzle.words.length) {
                 setTimeout(() => {
@@ -195,7 +220,7 @@ class WordSearchGame {
         for (let i = 0; i <= distance; i++) {
             const row = startRow + stepRow * i;
             const col = startCol + stepCol * i;
-            if (row >= 0 && row < this.puzzle.grid.length && col >= 0 && col < this.puzzle.grid[0].length) {
+            if (row >= 0 && row < this.grid.length && col >= 0 && col < this.grid[0].length) {
                 cells.push({ row, col });
             }
         }
@@ -205,16 +230,14 @@ class WordSearchGame {
 
     getSelectedWord() {
         return this.selectedCells
-            .map(cell => this.puzzle.grid[cell.row][cell.col])
+            .map(cell => this.grid[cell.row][cell.col])
             .join('');
     }
 
     updateSelectedCells() {
         // Clear previous selection
         document.querySelectorAll('.word-search-cell.selected').forEach(cell => {
-            if (!cell.classList.contains('found')) {
-                cell.classList.remove('selected');
-            }
+            cell.classList.remove('selected');
         });
         
         // Add selection to current cells
@@ -227,8 +250,10 @@ class WordSearchGame {
     }
 
     markWordAsFound(word) {
+        console.log('Marking word as found:', word);
+        
         if (this.wordPositions[word]) {
-            const position = this.wordPositions[word][0]; // Use first position found
+            const position = this.wordPositions[word][0];
             const cells = this.getCellsBetween(
                 position.start.row, position.start.col,
                 position.end.row, position.end.col
@@ -244,13 +269,14 @@ class WordSearchGame {
         }
     }
 
-    updateWordsList() {
-        this.foundWords.forEach(word => {
-            const wordElement = document.querySelector(`[data-word="${word}"]`);
-            if (wordElement) {
-                wordElement.classList.add('found');
-            }
-        });
+    updateWordInList(word) {
+        const wordElement = document.querySelector(`[data-word="${word}"]`);
+        if (wordElement) {
+            wordElement.classList.add('found');
+            console.log('Updated word in list:', word);
+        } else {
+            console.log('Could not find word element for:', word);
+        }
     }
 
     clearSelection() {
@@ -266,7 +292,6 @@ let currentWordSearchGame = null;
 
 // Get puzzles from multiple possible sources
 function getWordSearchPuzzles() {
-    // Try different ways to access the puzzles
     if (typeof window.wordSearchPuzzles !== 'undefined') {
         return window.wordSearchPuzzles;
     }
@@ -274,23 +299,25 @@ function getWordSearchPuzzles() {
         return wordSearchPuzzles;
     }
     
-    // Fallback puzzles if none are loaded
     console.warn('No word search puzzles loaded, using fallback');
     return [
         {
-            title: "Love & Romance",
-            words: ["LOVE", "HEART", "KISS", "HUG"],
+            title: "Dubai Adventure",
+            words: ["DUBAI", "CHOCOLATE", "LABUBU"],
             grid: [
-                ['L', 'O', 'V', 'E'],
-                ['K', 'H', 'E', 'A'],
-                ['I', 'U', 'R', 'R'],
-                ['S', 'G', 'T', 'T']
+                'DBOAULOOAU',
+                'BAITHABULC',
+                'IUUULBBCAH',
+                'HUUBDUBAIO',
+                'ATLTBBAOTC',
+                'AAABBUUABO',
+                'OTULUAABLL',
+                'BBCEUUBOAE'
             ]
         }
     ];
 }
 
-// Word search popup management
 function showWordSearch(imageIndex) {
     console.log('Show word search for image index:', imageIndex);
     
@@ -308,7 +335,6 @@ function showWordSearch(imageIndex) {
     
     currentWordSearchGame = new WordSearchGame(puzzle, () => {
         console.log('Puzzle completed, unlocking image');
-        // Unlock the current image and auto-close
         if (typeof window.unlockCurrentImage === 'function') {
             window.unlockCurrentImage();
         } else if (typeof unlockCurrentImage === 'function') {
@@ -329,16 +355,14 @@ function hideWordSearch() {
     currentWordSearchGame = null;
 }
 
-// Make functions globally accessible
 window.showWordSearch = showWordSearch;
 window.hideWordSearch = hideWordSearch;
 
-// Initialize word search event listeners
 function initWordSearch() {
     console.log('Initializing word search...');
-    console.log('Available puzzles:', getWordSearchPuzzles());
+    const puzzles = getWordSearchPuzzles();
+    console.log('Available puzzles:', puzzles);
     
-    // Word search popup close events
     const closeButton = document.getElementById('close-word-search');
     const popup = document.getElementById('word-search-popup');
     
